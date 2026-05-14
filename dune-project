@@ -20,4 +20,5 @@
  (depends
   (ocaml (>= 4.14))
   (dune :build)
-  (coq-core (>= 8.18))))
+  (coq-core (>= 8.18))
+  (coq-stdlib (>= 8.18))))
