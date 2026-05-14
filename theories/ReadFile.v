@@ -28,10 +28,10 @@
       Unset ReadFile MaxArrayLength.   (** restore the default *)
 *)
 
-From Stdlib.Init Require Export Byte.
-From Stdlib Require Export PArray.
-From Stdlib Require Export Uint63.
-From Stdlib Require Export PrimString.
+From Coq.Init Require Export Byte.
+From Coq Require Export PArray.
+From Coq Require Export Uint63.
+From Coq Require Export PrimString.
 
 Register PArray.array as readfile.array.type.
 
