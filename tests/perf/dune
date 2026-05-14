@@ -1,10 +1,10 @@
 (coq.theory
  (name ReadFile_Perf)
- (theories ReadFile)
+ (theories ReadFile Stdlib)
  (plugins rocq-read-file.plugin))
 
-(copy_files ../data/*.bin)
-(copy_files ../data/*.txt)
+(copy_files data/*.bin)
+(copy_files data/*.txt)
 
 ; Work around missing dune support for Extra Dependency.
 ; https://github.com/ocaml/dune/pull/9591
@@ -13,8 +13,8 @@
 (rule
  (target dep_hashes.v)
  (deps
-  (glob_files ../data/*.bin)
-  (glob_files ../data/*.txt))
+  (glob_files data/*.bin)
+  (glob_files data/*.txt))
  (action
   (with-stdout-to %{target}
    (run rocq-read-file-shafile %{deps}))))
