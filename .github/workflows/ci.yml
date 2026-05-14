@@ -18,6 +18,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Generate test data
+        run: bash tests/gen.sh
+
       - uses: rocq-prover/docker-opam-action@master
         with:
           coq_version: ${{ matrix.coq_version }}
@@ -27,10 +30,6 @@ jobs:
             endGroup
             startGroup "Print opam config"
               opam config list; opam repo list; opam list
-            endGroup
-          before_script: |
-            startGroup "Generate test data"
-              bash tests/gen.sh
             endGroup
           script: |
             startGroup "Build"
