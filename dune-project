@@ -1,5 +1,5 @@
 (lang dune 3.8)
-(using coq 0.7)
+(using coq 0.8)
 
 (name rocq-read-file)
 
@@ -18,8 +18,8 @@
  (description
   "A Rocq plugin that reads binary files into Rocq-side primitive values: byte arrays, int63 arrays, or primitive strings. Auto-nests into primitive arrays when results exceed PArray.max_length.")
  (depends
-  (ocaml (>= 4.09))
+  (ocaml (>= 4.14))
   (dune :build)
   (ppx_optcomp :build)
-  (coq-core (or (>= 8.18) (= dev)))
-  (coq-stdlib (or (>= 8.18) (= dev)))))
+  (rocq-runtime (or (>= 9.0) (= dev)))
+  (rocq-stdlib (or (>= 9.0) (= dev)))))

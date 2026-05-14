@@ -4,7 +4,7 @@ DECLARE PLUGIN "rocq-read-file.plugin"
 
 open Ltac_plugin
 open Stdarg
-open Compat.GramPrim
+open Procq.Prim
 open Read_file
 
 let int = integer

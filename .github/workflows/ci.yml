@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        coq_version: ['8.20', '9.0', '9.1', '9.2']
+        coq_version: ['9.0', '9.1', '9.2']
 
     runs-on: ubuntu-latest
 

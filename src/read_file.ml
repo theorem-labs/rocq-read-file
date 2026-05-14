@@ -91,7 +91,7 @@ let read_slice (src : file_source) (sl : slice) : bytes =
 (* ================================================================== *)
 
 let lib_ref_ind (key : string) : inductive =
-  match Compat.Rocqlib.lib_ref key with
+  match Rocqlib.lib_ref key with
   | GlobRef.IndRef ind -> ind
   | _ ->
     CErrors.user_err
@@ -99,7 +99,7 @@ let lib_ref_ind (key : string) : inductive =
           ++ str "\" does not refer to an inductive type.")
 
 let lib_ref_const (key : string) : Constant.t =
-  match Compat.Rocqlib.lib_ref key with
+  match Rocqlib.lib_ref key with
   | GlobRef.ConstRef c -> c
   | _ ->
     CErrors.user_err
