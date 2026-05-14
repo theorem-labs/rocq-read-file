@@ -20,5 +20,6 @@
  (depends
   (ocaml (>= 4.09))
   (dune :build)
+  (cppo (and :build (>= 1.6.8)))
   (coq-core (>= 8.18))
   (coq-stdlib (>= 8.18))))

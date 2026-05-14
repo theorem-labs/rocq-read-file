@@ -11,6 +11,7 @@ bug-reports: "https://github.com/theorem-labs/rocq-read-file/issues"
 depends: [
   "ocaml" {>= "4.09"}
   "dune" {>= "3.8" & build}
+  "cppo" {build & >= "1.6.8"}
   "coq-core" {>= "8.18"}
   "coq-stdlib" {>= "8.18"}
   "odoc" {with-doc}

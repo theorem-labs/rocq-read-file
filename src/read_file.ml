@@ -271,7 +271,7 @@ let pstring_type_term () : Constr.types =
 
 let declare_def ~env ~name ~typ ~body =
   let sigma = Evd.from_env env in
-  let univs = Evd.univ_entry ~poly:PolyFlags.default sigma in
+  let univs = Compat.univ_entry_mono sigma in
   let entry = Declare.definition_entry ~univs ~types:typ body in
   let _kn =
     Declare.declare_constant
