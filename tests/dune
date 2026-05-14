@@ -1,3 +1,5 @@
+(dirs :standard \ perf)
+
 (coq.theory
  (name ReadFile_Tests)
  (theories ReadFile)
