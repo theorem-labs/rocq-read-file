@@ -21,5 +21,5 @@
   (ocaml (>= 4.09))
   (dune :build)
   (ppx_optcomp :build)
-  (coq-core (>= 8.18))
-  (coq-stdlib (>= 8.18))))
+  (coq-core (or (>= 8.18) (= dev)))
+  (coq-stdlib (or (>= 8.18) (= dev)))))
