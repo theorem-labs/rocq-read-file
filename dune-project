@@ -19,5 +19,5 @@
   "A Rocq plugin that reads binary files into Rocq-side primitive values: byte arrays, int63 arrays, or primitive strings. Auto-nests into primitive arrays when results exceed PArray.max_length.")
  (depends
   (ocaml (>= 4.14))
-  (dune (>= 3.8))
+  (dune :build)
   (coq-core (>= 8.18))))

@@ -1,0 +1,3 @@
+(executable
+ (name shafile)
+ (public_name rocq-read-file-shafile))

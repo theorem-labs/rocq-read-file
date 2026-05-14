@@ -3,6 +3,9 @@
     [0x48; 0x65; 0x6C; 0x6C; 0x6F; 0x21]. *)
 
 From ReadFile Require Import ReadFile.
+From ReadFile_Tests Require dep_hashes.
+
+From ReadFile_Tests Extra Dependency "small.bin" as small.
 
 Open Scope uint63_scope.
 

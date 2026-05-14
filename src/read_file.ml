@@ -14,13 +14,22 @@ let no_slice = { offset = None; length = None }
 let resolve_path (path : string) : string =
   if Sys.file_exists path then path
   else
-    let from_loadpath =
-      try Some (Loadpath.locate_file path)
-      with Not_found -> None
+    let as_extra =
+      try
+        let id = Names.Id.of_string (Filename.remove_extension (Filename.basename path)) in
+        Some (ComExtraDeps.query_extra_dep id)
+      with _ -> None
     in
-    match from_loadpath with
+    match as_extra with
     | Some resolved -> resolved
-    | None -> path
+    | None ->
+      let from_loadpath =
+        try Some (Loadpath.locate_file path)
+        with Not_found -> None
+      in
+      match from_loadpath with
+      | Some resolved -> resolved
+      | None -> path
 
 let read_slice (path : string) (sl : slice) : bytes =
   let path = resolve_path path in

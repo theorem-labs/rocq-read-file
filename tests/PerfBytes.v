@@ -7,6 +7,14 @@
 *)
 
 From ReadFile Require Import ReadFile.
+From ReadFile_Tests Require dep_hashes.
+
+From ReadFile_Tests Extra Dependency "rand_1k.bin" as rand_1k.
+From ReadFile_Tests Extra Dependency "rand_64k.bin" as rand_64k.
+From ReadFile_Tests Extra Dependency "rand_1m.bin" as rand_1m.
+From ReadFile_Tests Extra Dependency "rand_4m.bin" as rand_4m.
+From ReadFile_Tests Extra Dependency "rand_16m.bin" as rand_16m.
+From ReadFile_Tests Extra Dependency "rand_64m.bin" as rand_64m.
 
 (* depth 1 — single primitive array *)
 Time ReadFileBytes "rand_1k.bin"   As b_1k.
