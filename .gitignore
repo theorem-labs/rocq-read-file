@@ -35,7 +35,7 @@ nra.cache
 native_compute_profile_*.data
 
 _build/
-tests/data/
+tests/perf/data/
 
 # generated timing files
 *.timing.diff

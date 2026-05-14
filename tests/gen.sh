@@ -20,7 +20,7 @@
 set -euo pipefail
 
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DIR="${SELF_DIR}/data"
+DIR="${SELF_DIR}/perf/data"
 mkdir -p "${DIR}"
 
 echo "Generating test data in ${DIR}"
