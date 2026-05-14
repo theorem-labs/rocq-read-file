@@ -7,58 +7,27 @@ on:
     branches: [ main ]
 
 jobs:
-  build-docker:
+  build:
     strategy:
       fail-fast: false
       matrix:
-        coq_version: ['8.20']
-
-    runs-on: ubuntu-latest
-    container:
-      image: coqorg/coq:${{ matrix.coq_version }}
-      options: --user root
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Generate test data
-        run: |
-          chmod +x tests/gen.sh
-          tests/gen.sh
-
-      - name: Build
-        run: |
-          eval $(opam env)
-          dune build
-
-  build-opam:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - ocaml_version: '4.14'
-            coq_version: '9.0.0'
-          - ocaml_version: '4.14'
-            coq_version: '9.1.0'
+        coq_version: ['8.20', '9.0', '9.1']
 
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ocaml/setup-ocaml@v3
+      - uses: rocq-prover/docker-opam-action@master
         with:
-          ocaml-compiler: ${{ matrix.ocaml_version }}
-
-      - name: Install Rocq
-        run: |
-          opam repo add coq-released https://coq.inria.fr/opam/released
-          opam install -y coq-core.${{ matrix.coq_version }} coq-stdlib.${{ matrix.coq_version }}
-
-      - name: Generate test data
-        run: |
-          chmod +x tests/gen.sh
-          tests/gen.sh
-
-      - name: Build
-        run: opam exec -- dune build
+          coq_version: ${{ matrix.coq_version }}
+          before_script: |
+            startGroup "Generate test data"
+              chmod +x tests/gen.sh
+              tests/gen.sh
+            endGroup
+          script: |
+            startGroup "Build"
+              opam exec -- dune build
+            endGroup
+          uninstall: ''

@@ -28,9 +28,11 @@
       Unset ReadFile MaxArrayLength.   (** restore the default *)
 *)
 
-Declare ML Module "rocq-read-file.plugin".
-
 From Stdlib.Init Require Export Byte.
 From Stdlib Require Export PArray.
 From Stdlib Require Export Uint63.
 From Stdlib Require Export PrimString.
+
+Register PArray.array as readfile.array.type.
+
+Declare ML Module "rocq-read-file.plugin".

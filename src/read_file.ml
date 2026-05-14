@@ -72,25 +72,24 @@ let read_slice (path : string) (sl : slice) : bytes =
        buf)
 
 (* ================================================================== *)
-(* Looking up registered or named globals                             *)
+(* Looking up registered globals                                      *)
 (* ================================================================== *)
 
-let try_lib_refs (keys : string list) : GlobRef.t option =
-  let rec loop = function
-    | [] -> None
-    | k :: rest ->
-      try Some (Rocqlib.lib_ref k) with _ -> loop rest
-  in
-  loop keys
+let lib_ref_ind (key : string) : inductive =
+  match Rocqlib.lib_ref key with
+  | GlobRef.IndRef ind -> ind
+  | _ ->
+    CErrors.user_err
+      Pp.(str "lib_ref \"" ++ str key
+          ++ str "\" does not refer to an inductive type.")
 
-let locate_first (qids : string list) : GlobRef.t option =
-  let rec loop = function
-    | [] -> None
-    | q :: rest ->
-      try Some (Nametab.locate (Libnames.qualid_of_string q))
-      with Not_found -> loop rest
-  in
-  loop qids
+let lib_ref_const (key : string) : Constant.t =
+  match Rocqlib.lib_ref key with
+  | GlobRef.ConstRef c -> c
+  | _ ->
+    CErrors.user_err
+      Pp.(str "lib_ref \"" ++ str key
+          ++ str "\" does not refer to a constant.")
 
 let lookup_qualid_ind (qid : Libnames.qualid) : inductive =
   let gr =
@@ -105,64 +104,17 @@ let lookup_qualid_ind (qid : Libnames.qualid) : inductive =
     CErrors.user_err
       Pp.(str "Not an inductive type: " ++ Libnames.pr_qualid qid)
 
-let must_const ~what gr_opt : Constant.t =
-  match gr_opt with
-  | Some (GlobRef.ConstRef c) -> c
-  | _ ->
-    CErrors.user_err
-      Pp.(str "Cannot find " ++ str what
-          ++ str ". Make sure the relevant module has been required.")
-
 let default_byte_inductive () : inductive =
-  match try_lib_refs ["core.byte.type"] with
-  | Some (GlobRef.IndRef ind) -> ind
-  | _ ->
-    match locate_first ["Byte.byte"; "Corelib.Init.Byte.byte"; "Stdlib.Init.Byte.byte"] with
-    | Some (GlobRef.IndRef ind) -> ind
-    | _ ->
-      CErrors.user_err
-        Pp.(str "Cannot find Byte.byte. \
-                 Make sure to Require Import Byte.")
+  lib_ref_ind "core.byte.type"
 
 let array_constant () : Constant.t =
-  let opt =
-    match try_lib_refs ["array.array"; "core.array.type"] with
-    | Some _ as o -> o
-    | None ->
-      locate_first
-        ["array";
-         "Corelib.Array.PrimArray.array";
-         "PrimArray.array";
-         "PArray.array";
-         "Stdlib.Array.PArray.array"]
-  in
-  must_const ~what:"the primitive array type" opt
+  lib_ref_const "readfile.array.type"
 
 let int63_type_constant () : Constant.t =
-  let opt =
-    match try_lib_refs ["num.int63.type"; "core.int63.type"] with
-    | Some _ as o -> o
-    | None ->
-      locate_first
-        ["int";
-         "Corelib.Numbers.Cyclic.Int63.PrimInt63.int";
-         "PrimInt63.int"; "Uint63.int";
-         "Stdlib.Numbers.Cyclic.Int63.PrimInt63.int"]
-  in
-  must_const ~what:"the primitive int63 type" opt
+  lib_ref_const "num.int63.type"
 
 let pstring_type_constant () : Constant.t =
-  let opt =
-    match try_lib_refs ["core.pstring.type"; "core.string.type"] with
-    | Some _ as o -> o
-    | None ->
-      locate_first
-        ["string";
-         "Corelib.Strings.PrimString.string";
-         "PrimString.string";
-         "Stdlib.Strings.PrimString.string"]
-  in
-  must_const ~what:"the primitive string type" opt
+  lib_ref_const "strings.pstring.type"
 
 (* ================================================================== *)
 (* Validation of byte-compatible inductives                           *)
