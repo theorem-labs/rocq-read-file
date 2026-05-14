@@ -25,6 +25,17 @@ ReadFileBytes  "f" As n Offset 100 Length 1024.
 
 `Offset` defaults to `0` and `Length` defaults to "to end of file".
 
+### Controlling chunk size
+
+The per-array maximum element count defaults to `PArray.max_length`
+(4_194_302). You can lower it to force nesting at a smaller threshold:
+
+```coq
+Set ReadFile MaxArrayLength 1000.
+ReadFileBytes "data.bin" As chunked.   (* arrays of at most 1000 elements *)
+Unset ReadFile MaxArrayLength.         (* restore the default *)
+```
+
 ### Per-command notes
 
 * **`ReadFileBytes`** — leaf type defaults to `Byte.byte`.  You may
@@ -106,13 +117,9 @@ them but tuck the output into per-target log files.
 
 ## Build dependencies
 
-* Coq 8.18+ or Rocq 9.x.  On Rocq 9, change
-  `coq-core.plugins.ltac` to `rocq-runtime.plugins.ltac` in
-  `src/dune` and adjust the `Require` lines in `theories/ReadFile.v`
-  if the unqualified form doesn't resolve.
-
+* Coq 8.18+ or Rocq 9.x.
 * `coq-core` (or `rocq-runtime`) must be installed and visible to
-  dune.  Standard opam install is fine.
+  dune. Standard opam install is fine.
 
 ## Implementation notes
 
@@ -138,6 +145,11 @@ them but tuck the output into per-target log files.
 
 * Globals (`Byte.byte`, the array type constant, the int63 type
   constant, and the primitive-string type constant) are looked up
-  via `Coqlib.lib_ref` first, then falling back to `Nametab.locate`
+  via `Rocqlib.lib_ref` first, then falling back to `Nametab.locate`
   on a list of common qualified names so the plugin works against
-  several stdlib layouts.
+  several stdlib layouts (Corelib, Stdlib, legacy Coq paths).
+
+* File paths are resolved first as-is (relative to the working
+  directory), then via the Rocq load path. This means files placed
+  alongside `.v` sources (or in directories registered with `-R`/`-Q`)
+  are found automatically.

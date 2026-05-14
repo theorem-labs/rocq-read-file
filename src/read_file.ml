@@ -11,7 +11,19 @@ let no_slice = { offset = None; length = None }
 (* File I/O                                                           *)
 (* ================================================================== *)
 
+let resolve_path (path : string) : string =
+  if Sys.file_exists path then path
+  else
+    let from_loadpath =
+      try Some (Loadpath.locate_file path)
+      with Not_found -> None
+    in
+    match from_loadpath with
+    | Some resolved -> resolved
+    | None -> path
+
 let read_slice (path : string) (sl : slice) : bytes =
+  let path = resolve_path path in
   let ic =
     try open_in_bin path
     with Sys_error msg ->
@@ -58,7 +70,7 @@ let try_lib_refs (keys : string list) : GlobRef.t option =
   let rec loop = function
     | [] -> None
     | k :: rest ->
-      try Some (Coqlib.lib_ref k) with _ -> loop rest
+      try Some (Rocqlib.lib_ref k) with _ -> loop rest
   in
   loop keys
 
@@ -96,7 +108,7 @@ let default_byte_inductive () : inductive =
   match try_lib_refs ["core.byte.type"] with
   | Some (GlobRef.IndRef ind) -> ind
   | _ ->
-    match locate_first ["Byte.byte"; "Coq.Init.Byte.byte"; "Stdlib.Init.Byte.byte"] with
+    match locate_first ["Byte.byte"; "Corelib.Init.Byte.byte"; "Stdlib.Init.Byte.byte"] with
     | Some (GlobRef.IndRef ind) -> ind
     | _ ->
       CErrors.user_err
@@ -109,7 +121,11 @@ let array_constant () : Constant.t =
     | Some _ as o -> o
     | None ->
       locate_first
-        ["PArray.array"; "Coq.Array.PArray.array"; "Stdlib.Array.PArray.array"]
+        ["array";
+         "Corelib.Array.PrimArray.array";
+         "PrimArray.array";
+         "PArray.array";
+         "Stdlib.Array.PArray.array"]
   in
   must_const ~what:"the primitive array type" opt
 
@@ -119,8 +135,9 @@ let int63_type_constant () : Constant.t =
     | Some _ as o -> o
     | None ->
       locate_first
-        ["PrimInt63.int"; "Uint63.int";
-         "Coq.Numbers.Cyclic.Int63.PrimInt63.int";
+        ["int";
+         "Corelib.Numbers.Cyclic.Int63.PrimInt63.int";
+         "PrimInt63.int"; "Uint63.int";
          "Stdlib.Numbers.Cyclic.Int63.PrimInt63.int"]
   in
   must_const ~what:"the primitive int63 type" opt
@@ -131,8 +148,9 @@ let pstring_type_constant () : Constant.t =
     | Some _ as o -> o
     | None ->
       locate_first
-        ["PrimString.string";
-         "Coq.Strings.PrimString.string";
+        ["string";
+         "Corelib.Strings.PrimString.string";
+         "PrimString.string";
          "Stdlib.Strings.PrimString.string"]
   in
   must_const ~what:"the primitive string type" opt
@@ -172,7 +190,7 @@ let check_byte_compatible env (ind : inductive) =
     oib.Declarations.mind_consnrealargs
 
 let byte_constructor_constrs (ind : inductive) : Constr.t array =
-  Array.init 256 (fun i -> Constr.mkConstruct (ind, i + 1))
+  Array.init 256 (fun i -> Constr.UnsafeMonomorphic.mkConstruct (ind, i + 1))
 
 (* ================================================================== *)
 (* Primitive-array term construction                                  *)
@@ -194,10 +212,21 @@ let make_array_type ~elem_type : Constr.types =
   let inst = array_set_instance () in
   Constr.mkApp (Constr.mkConstU (array_c, inst), [| elem_type |])
 
-(* Primitive-array maximum length. PArray.max_length = 4194302
-   = 2^22 - 2.  Hard-coded here rather than read from the kernel
-   because there is no canonical OCaml export of it across versions. *)
-let max_array_length = 4194302
+let default_max_array_length = 4194302
+let max_array_length = ref default_max_array_length
+
+let set_max_array_length n =
+  if n <= 0 then
+    CErrors.user_err
+      Pp.(str "MaxArrayLength must be positive; got " ++ int n ++ str ".");
+  if n > 4194302 then
+    CErrors.user_err
+      Pp.(str "MaxArrayLength cannot exceed PArray.max_length (4194302); got "
+          ++ int n ++ str ".");
+  max_array_length := n
+
+let reset_max_array_length () =
+  max_array_length := default_max_array_length
 
 (* ------------------------------------------------------------------ *)
 (* Auto-nesting builder                                               *)
@@ -215,12 +244,12 @@ let rec build_nested_array
     ~elem_type ~elem_default (elements : Constr.t array)
     : Constr.t * Constr.types =
   let n = Array.length elements in
-  if n <= max_array_length then
+  if n <= !max_array_length then
     let body = make_array_term ~elements ~default:elem_default ~elem_type in
     let typ  = make_array_type  ~elem_type in
     (body, typ)
   else begin
-    let m = max_array_length in
+    let m = !max_array_length in
     let n_chunks = (n + m - 1) / m in
     let chunks =
       Array.init n_chunks (fun i ->
@@ -242,7 +271,7 @@ let rec build_nested_array
 (* Primitive-string term construction                                 *)
 (* ================================================================== *)
 
-let pstring_max_length = Pstring.max_length
+let pstring_max_length = Pstring.max_length_int
 
 (* NB: depending on Rocq version, [Pstring.of_string] may return
    [Pstring.t option] (signalling overflow) or [Pstring.t] directly.
@@ -258,7 +287,7 @@ let make_pstring_term (s : string) : Constr.t =
           ++ int (String.length s))
 
 let pstring_type_term () : Constr.types =
-  Constr.mkConst (pstring_type_constant ())
+  Constr.UnsafeMonomorphic.mkConst (pstring_type_constant ())
 
 (* ================================================================== *)
 (* Declaring the resulting global                                     *)
@@ -266,7 +295,7 @@ let pstring_type_term () : Constr.types =
 
 let declare_def ~env ~name ~typ ~body =
   let sigma = Evd.from_env env in
-  let univs = Evd.univ_entry ~poly:false sigma in
+  let univs = Evd.univ_entry ~poly:PolyFlags.default sigma in
   let entry = Declare.definition_entry ~univs ~types:typ body in
   let _kn =
     Declare.declare_constant
@@ -297,7 +326,7 @@ let read_bytes
   check_byte_compatible env ind;
   let n = Bytes.length raw in
   let ctors = byte_constructor_constrs ind in
-  let elem_type = Constr.mkInd ind in
+  let elem_type = Constr.UnsafeMonomorphic.mkInd ind in
   let elements =
     Array.init n (fun i -> ctors.(Char.code (Bytes.get raw i)))
   in
@@ -353,7 +382,7 @@ let read_int63
     Array.init m (fun i -> Constr.mkInt (read raw (i * 8)))
   in
   let elem_default = Constr.mkInt (Uint63.of_int 0) in
-  let elem_type = Constr.mkConst (int63_type_constant ()) in
+  let elem_type = Constr.UnsafeMonomorphic.mkConst (int63_type_constant ()) in
   let body, typ =
     build_nested_array ~elem_type ~elem_default elements
   in

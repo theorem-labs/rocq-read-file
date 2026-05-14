@@ -2,9 +2,12 @@ DECLARE PLUGIN "rocq-read-file.plugin"
 
 {
 
+open Ltac_plugin
 open Stdarg
-open Pcoq.Prim
+open Procq.Prim
 open Read_file
+
+let int = integer
 
 let mk_slice (off, len) : Read_file.slice =
   { offset = off; length = len }
@@ -47,5 +50,11 @@ VERNAC COMMAND EXTEND ReadFile CLASSIFIED AS SIDEFF
 
 | [ "ReadFileString" string(file) "As" ident(name) slice_spec(s) ] ->
   { Read_file.read_string file name (mk_slice s) }
+
+| [ "Set" "ReadFile" "MaxArrayLength" int(n) ] ->
+  { Read_file.set_max_array_length n }
+
+| [ "Unset" "ReadFile" "MaxArrayLength" ] ->
+  { Read_file.reset_max_array_length () }
 
 END

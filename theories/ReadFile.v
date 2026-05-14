@@ -21,13 +21,16 @@
           array of arrays of strings, etc).
 
     All commands auto-nest in primitive arrays when the result would
-    exceed [PArray.max_length] elements at any level.
+    exceed [PArray.max_length] elements at any level. The per-chunk
+    maximum can be lowered with:
+
+      Set ReadFile MaxArrayLength N.   (** 1 <= N <= 4194302 *)
+      Unset ReadFile MaxArrayLength.   (** restore the default *)
 *)
 
 Declare ML Module "rocq-read-file.plugin".
 
-(* Use unqualified Require so this works on both Coq 8.x and Rocq 9. *)
-Require Export Byte.
-Require Export PArray.
-Require Export Uint63.
-Require Export PrimString.
+From Stdlib.Init Require Export Byte.
+From Stdlib Require Export PArray.
+From Stdlib Require Export Uint63.
+From Stdlib Require Export PrimString.

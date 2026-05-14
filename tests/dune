@@ -1,0 +1,7 @@
+(coq.theory
+ (name ReadFile_Tests)
+ (theories ReadFile)
+ (plugins rocq-read-file.plugin))
+
+(copy_files data/*.bin)
+(copy_files data/*.txt)
