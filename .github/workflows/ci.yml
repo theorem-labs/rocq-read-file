@@ -35,6 +35,9 @@ jobs:
             startGroup "Build"
               opam exec -- dune build
             endGroup
+            startGroup "Install"
+              opam exec -- dune install
+            endGroup
             startGroup "Perf tests"
               opam exec -- dune build --root tests/perf
             endGroup
