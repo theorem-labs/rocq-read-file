@@ -38,8 +38,13 @@ gen_text () {
   # newlines. LC_ALL=C avoids locale-dependent character classes.
   local out="$1" size="$2"
   printf '  %-22s %10d bytes (ASCII)\n' "$(basename "${out}")" "${size}"
-  LC_ALL=C tr -dc 'A-Za-z0-9 \n' < /dev/urandom \
-    | head -c "${size}" > "${out}"
+  # Run in a subshell with pipefail disabled: when head has read enough
+  # bytes it closes its stdin, tr receives SIGPIPE and exits non-zero,
+  # which is expected and must not fail the script.
+  ( set +o pipefail
+    LC_ALL=C tr -dc 'A-Za-z0-9 \n' < /dev/urandom \
+      | head -c "${size}" > "${out}"
+  )
 }
 
 # ---- correctness fixture: bytes [0x48,0x65,0x6C,0x6C,0x6F,0x21] ----
