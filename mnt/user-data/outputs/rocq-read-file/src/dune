@@ -1,0 +1,13 @@
+; OCaml plugin library.
+;
+; Note for Rocq 9: replace `coq-core.plugins.ltac` with
+; `rocq-runtime.plugins.ltac`.
+
+(library
+ (name read_file_plugin)
+ (public_name rocq-read-file.plugin)
+ (synopsis "Read files into Rocq as primitive arrays / strings")
+ (flags :standard -rectypes -w -27-32-33-39)
+ (libraries coq-core.plugins.ltac))
+
+(coq.pp (modules g_read_file))

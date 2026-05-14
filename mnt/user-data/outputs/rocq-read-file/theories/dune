@@ -1,0 +1,4 @@
+(coq.theory
+ (name ReadFile)
+ (package rocq-read-file)
+ (theories Coq))

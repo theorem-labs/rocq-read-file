@@ -1,0 +1,51 @@
+DECLARE PLUGIN "rocq-read-file.plugin"
+
+{
+
+open Stdarg
+open Pcoq.Prim
+open Read_file
+
+let mk_slice (off, len) : Read_file.slice =
+  { offset = off; length = len }
+
+}
+
+(* ------------------------------------------------------------------ *)
+(* Optional [Offset N] [Length N] suffix.                             *)
+(* ------------------------------------------------------------------ *)
+
+ARGUMENT EXTEND slice_spec
+TYPED AS (int option * int option)
+PRINTED BY { fun _ _ _ _ -> Pp.mt () }
+| [ "Offset" int(o) "Length" int(l) ] -> { (Some o, Some l) }
+| [ "Offset" int(o) ]                 -> { (Some o, None)   }
+| [ "Length" int(l) ]                 -> { (None,   Some l) }
+| [ ]                                 -> { (None,   None)   }
+END
+
+(* ------------------------------------------------------------------ *)
+(* The three vernacular commands.                                     *)
+(* ------------------------------------------------------------------ *)
+
+VERNAC COMMAND EXTEND ReadFile CLASSIFIED AS SIDEFF
+
+| [ "ReadFileBytes" string(file) "As" ident(name) slice_spec(s) ] ->
+  { Read_file.read_bytes file name None (mk_slice s) }
+
+| [ "ReadFileBytes" string(file) "As" ident(name) ":" reference(t)
+    slice_spec(s) ] ->
+  { Read_file.read_bytes file name (Some t) (mk_slice s) }
+
+| [ "ReadFileInt63" "LittleEndian" string(file) "As" ident(name)
+    slice_spec(s) ] ->
+  { Read_file.read_int63 file name LittleEndian (mk_slice s) }
+
+| [ "ReadFileInt63" "BigEndian" string(file) "As" ident(name)
+    slice_spec(s) ] ->
+  { Read_file.read_int63 file name BigEndian (mk_slice s) }
+
+| [ "ReadFileString" string(file) "As" ident(name) slice_spec(s) ] ->
+  { Read_file.read_string file name (mk_slice s) }
+
+END
