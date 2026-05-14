@@ -25,7 +25,8 @@ jobs:
         with:
           coq_version: ${{ matrix.coq_version }}
           before_install: |
-            startGroup "Workaround git dubious ownership"
+            startGroup "Fix workspace permissions"
+              sudo chown -R $(id -u):$(id -g) .
               git config --global --add safe.directory /github/workspace
             endGroup
             startGroup "Print opam config"
