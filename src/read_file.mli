@@ -1,5 +1,7 @@
 (** Public interface of the read-file plugin. *)
 
+type file_source = FilePath of string | ExtraDepIdent of Names.Id.t
+
 type endianness = LittleEndian | BigEndian
 
 type slice = {
@@ -13,10 +15,10 @@ val set_max_array_length : int -> unit
 val reset_max_array_length : unit -> unit
 
 val read_bytes :
-  string -> Names.Id.t -> Libnames.qualid option -> slice -> unit
+  file_source -> Names.Id.t -> Libnames.qualid option -> slice -> unit
 
 val read_int63 :
-  string -> Names.Id.t -> endianness -> slice -> unit
+  file_source -> Names.Id.t -> endianness -> slice -> unit
 
 val read_string :
-  string -> Names.Id.t -> slice -> unit
+  file_source -> Names.Id.t -> slice -> unit

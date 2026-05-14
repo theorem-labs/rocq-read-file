@@ -5,60 +5,55 @@ values: byte arrays, int63 arrays, or primitive strings.
 
 ## Commands
 
+The file argument can be a string literal (`"path/to/file"`) or an
+identifier declared via `Extra Dependency` (see below):
+
 ```coq
 From ReadFile Require Import ReadFile.
+From MyTheory Extra Dependency "my_data.bin" as my_data.
 
-ReadFileBytes  "path/to/file"  As name.
-ReadFileBytes  "path/to/file"  As name : MyByteType.
-ReadFileInt63  LittleEndian "path/to/file" As name.
-ReadFileInt63  BigEndian    "path/to/file" As name.
-ReadFileString "path/to/file"  As name.
+ReadFileBytes  my_data          As name.
+ReadFileBytes  "path/to/file"   As name.
+ReadFileBytes  my_data          As name : MyByteType.
+ReadFileInt63  LittleEndian my_data As name.
+ReadFileInt63  BigEndian    my_data As name.
+ReadFileString my_data          As name.
 ```
 
 Every command also accepts an optional slice suffix:
 
 ```coq
-ReadFileBytes  "f" As n Length 1024.
-ReadFileBytes  "f" As n Offset 100.
-ReadFileBytes  "f" As n Offset 100 Length 1024.
+ReadFileBytes  my_data As n Length 1024.
+ReadFileBytes  my_data As n Offset 100.
+ReadFileBytes  my_data As n Offset 100 Length 1024.
 ```
 
 `Offset` defaults to `0` and `Length` defaults to "to end of file".
 
-### Controlling chunk size
+### Extra Dependency (recommended)
 
-The per-array maximum element count defaults to `PArray.max_length`
-(4_194_302). You can lower it to force nesting at a smaller threshold:
-
-```coq
-Set ReadFile MaxArrayLength 1000.
-ReadFileBytes "data.bin" As chunked.   (* arrays of at most 1000 elements *)
-Unset ReadFile MaxArrayLength.         (* restore the default *)
-```
-
-### File resolution and Extra Dependency
-
-File paths are resolved in order:
-
-1. As-is (relative to the working directory)
-2. Via `Extra Dependency` — if you declared the file with
-   `From <theory> Extra Dependency "file" as name`, the plugin
-   resolves it through Rocq's `ComExtraDeps` mechanism
-3. Via the Rocq load path (`-R`/`-Q` directories)
-
-When building with dune, use `Extra Dependency` to ensure proper
-dependency tracking so that changes to data files trigger rebuilds:
+Use `Extra Dependency` to declare data files so that Rocq tracks
+them as dependencies and the plugin can resolve them by identifier:
 
 ```coq
-From MyTheory Require dep_hashes.                       (* generated; see below *)
 From MyTheory Extra Dependency "my_data.bin" as my_data.
 
-ReadFileBytes "my_data.bin" As raw.
+ReadFileBytes my_data As raw.
 ```
+
+When the file is referenced by identifier, it is resolved through
+Rocq's `ComExtraDeps` mechanism.  When referenced by string path,
+the plugin resolves the path in order:
+
+1. As-is (relative to the working directory)
+2. Via `Extra Dependency` (derived from the filename stem)
+3. Via the Rocq load path (`-R`/`-Q` directories)
+
+#### Dune integration
 
 Because dune does not natively support `Extra Dependency`
 ([ocaml/dune#9591](https://github.com/ocaml/dune/pull/9591)), a
-helper tool `rocq-read-file-shafile` is provided. Add a rule to your
+helper tool `rocq-read-file-shafile` is provided.  Add a rule to your
 `dune` file to generate a dummy `.v` whose content changes when any
 data file changes:
 
@@ -72,6 +67,17 @@ data file changes:
 ```
 
 Then `Require dep_hashes` in each `.v` that uses data files.
+
+### Controlling chunk size
+
+The per-array maximum element count defaults to `PArray.max_length`
+(4_194_302). You can lower it to force nesting at a smaller threshold:
+
+```coq
+Set ReadFile MaxArrayLength 1000.
+ReadFileBytes "data.bin" As chunked.   (* arrays of at most 1000 elements *)
+Unset ReadFile MaxArrayLength.         (* restore the default *)
+```
 
 ### Per-command notes
 
@@ -182,11 +188,9 @@ them but tuck the output into per-target log files.
 
 * Globals (`Byte.byte`, the array type constant, the int63 type
   constant, and the primitive-string type constant) are looked up
-  via `Rocqlib.lib_ref` first, then falling back to `Nametab.locate`
-  on a list of common qualified names so the plugin works against
-  several stdlib layouts (Corelib, Stdlib, legacy Coq paths).
+  via `Rocqlib.lib_ref`.  The array type has no stdlib registration,
+  so `ReadFile.v` registers it as `readfile.array.type`.
 
-* File paths are resolved first as-is (relative to the working
-  directory), then via the Rocq load path. This means files placed
-  alongside `.v` sources (or in directories registered with `-R`/`-Q`)
-  are found automatically.
+* File sources can be an `Extra Dependency` identifier (resolved via
+  `ComExtraDeps.query_extra_dep`) or a string path (resolved as-is,
+  then via Extra Dependency fallback, then via the Rocq load path).

@@ -29,27 +29,41 @@ END
 
 (* ------------------------------------------------------------------ *)
 (* The three vernacular commands.                                     *)
+(* File source may be a string path or an Extra Dependency ident.     *)
 (* ------------------------------------------------------------------ *)
 
 VERNAC COMMAND EXTEND ReadFile CLASSIFIED AS SIDEFF
 
 | [ "ReadFileBytes" string(file) "As" ident(name) slice_spec(s) ] ->
-  { Read_file.read_bytes file name None (mk_slice s) }
+  { Read_file.read_bytes (FilePath file) name None (mk_slice s) }
+| [ "ReadFileBytes" ident(dep) "As" ident(name) slice_spec(s) ] ->
+  { Read_file.read_bytes (ExtraDepIdent dep) name None (mk_slice s) }
 
 | [ "ReadFileBytes" string(file) "As" ident(name) ":" reference(t)
     slice_spec(s) ] ->
-  { Read_file.read_bytes file name (Some t) (mk_slice s) }
+  { Read_file.read_bytes (FilePath file) name (Some t) (mk_slice s) }
+| [ "ReadFileBytes" ident(dep) "As" ident(name) ":" reference(t)
+    slice_spec(s) ] ->
+  { Read_file.read_bytes (ExtraDepIdent dep) name (Some t) (mk_slice s) }
 
 | [ "ReadFileInt63" "LittleEndian" string(file) "As" ident(name)
     slice_spec(s) ] ->
-  { Read_file.read_int63 file name LittleEndian (mk_slice s) }
+  { Read_file.read_int63 (FilePath file) name LittleEndian (mk_slice s) }
+| [ "ReadFileInt63" "LittleEndian" ident(dep) "As" ident(name)
+    slice_spec(s) ] ->
+  { Read_file.read_int63 (ExtraDepIdent dep) name LittleEndian (mk_slice s) }
 
 | [ "ReadFileInt63" "BigEndian" string(file) "As" ident(name)
     slice_spec(s) ] ->
-  { Read_file.read_int63 file name BigEndian (mk_slice s) }
+  { Read_file.read_int63 (FilePath file) name BigEndian (mk_slice s) }
+| [ "ReadFileInt63" "BigEndian" ident(dep) "As" ident(name)
+    slice_spec(s) ] ->
+  { Read_file.read_int63 (ExtraDepIdent dep) name BigEndian (mk_slice s) }
 
 | [ "ReadFileString" string(file) "As" ident(name) slice_spec(s) ] ->
-  { Read_file.read_string file name (mk_slice s) }
+  { Read_file.read_string (FilePath file) name (mk_slice s) }
+| [ "ReadFileString" ident(dep) "As" ident(name) slice_spec(s) ] ->
+  { Read_file.read_string (ExtraDepIdent dep) name (mk_slice s) }
 
 | [ "Set" "ReadFile" "MaxArrayLength" int(n) ] ->
   { Read_file.set_max_array_length n }

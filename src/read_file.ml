@@ -4,6 +4,8 @@ open Names
 
 type endianness = LittleEndian | BigEndian
 
+type file_source = FilePath of string | ExtraDepIdent of Names.Id.t
+
 type slice = { offset : int option; length : int option }
 let no_slice = { offset = None; length = None }
 
@@ -11,7 +13,7 @@ let no_slice = { offset = None; length = None }
 (* File I/O                                                           *)
 (* ================================================================== *)
 
-let resolve_path (path : string) : string =
+let resolve_file_path (path : string) : string =
   if Sys.file_exists path then path
   else
     let as_extra =
@@ -31,8 +33,21 @@ let resolve_path (path : string) : string =
       | Some resolved -> resolved
       | None -> path
 
-let read_slice (path : string) (sl : slice) : bytes =
-  let path = resolve_path path in
+let resolve_file_source (src : file_source) : string =
+  match src with
+  | ExtraDepIdent id ->
+    (try ComExtraDeps.query_extra_dep id
+     with e ->
+       CErrors.user_err
+         Pp.(str "Cannot resolve Extra Dependency \""
+             ++ Names.Id.print id ++ str "\". "
+             ++ str "Make sure you declared: "
+             ++ str "From <theory> Extra Dependency \"...\" as "
+             ++ Names.Id.print id ++ str "."))
+  | FilePath path -> resolve_file_path path
+
+let read_slice (src : file_source) (sl : slice) : bytes =
+  let path = resolve_file_source src in
   let ic =
     try open_in_bin path
     with Sys_error msg ->
@@ -275,7 +290,7 @@ let declare_def ~env ~name ~typ ~body =
 (* ================================================================== *)
 
 let read_bytes
-    (file : string) (name : Id.t)
+    (file : file_source) (name : Id.t)
     (ty_opt : Libnames.qualid option) (sl : slice) : unit =
   let env = Global.env () in
   let raw = read_slice file sl in
@@ -328,7 +343,7 @@ let read_uint63_be (buf : bytes) (off : int) : Uint63.t =
   Uint63.of_int64 !acc
 
 let read_int63
-    (file : string) (name : Id.t)
+    (file : file_source) (name : Id.t)
     (endian : endianness) (sl : slice) : unit =
   let env = Global.env () in
   let raw = read_slice file sl in
@@ -354,7 +369,7 @@ let read_int63
 (* ================================================================== *)
 
 let read_string
-    (file : string) (name : Id.t) (sl : slice) : unit =
+    (file : file_source) (name : Id.t) (sl : slice) : unit =
   let env = Global.env () in
   let raw = read_slice file sl in
   let n = Bytes.length raw in
