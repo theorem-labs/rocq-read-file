@@ -36,6 +36,43 @@ ReadFileBytes "data.bin" As chunked.   (* arrays of at most 1000 elements *)
 Unset ReadFile MaxArrayLength.         (* restore the default *)
 ```
 
+### File resolution and Extra Dependency
+
+File paths are resolved in order:
+
+1. As-is (relative to the working directory)
+2. Via `Extra Dependency` — if you declared the file with
+   `From <theory> Extra Dependency "file" as name`, the plugin
+   resolves it through Rocq's `ComExtraDeps` mechanism
+3. Via the Rocq load path (`-R`/`-Q` directories)
+
+When building with dune, use `Extra Dependency` to ensure proper
+dependency tracking so that changes to data files trigger rebuilds:
+
+```coq
+From MyTheory Require dep_hashes.                       (* generated; see below *)
+From MyTheory Extra Dependency "my_data.bin" as my_data.
+
+ReadFileBytes "my_data.bin" As raw.
+```
+
+Because dune does not natively support `Extra Dependency`
+([ocaml/dune#9591](https://github.com/ocaml/dune/pull/9591)), a
+helper tool `rocq-read-file-shafile` is provided. Add a rule to your
+`dune` file to generate a dummy `.v` whose content changes when any
+data file changes:
+
+```lisp
+(rule
+ (target dep_hashes.v)
+ (deps (glob_files data/*.bin))
+ (action
+  (with-stdout-to %{target}
+   (run rocq-read-file-shafile %{deps}))))
+```
+
+Then `Require dep_hashes` in each `.v` that uses data files.
+
 ### Per-command notes
 
 * **`ReadFileBytes`** — leaf type defaults to `Byte.byte`.  You may

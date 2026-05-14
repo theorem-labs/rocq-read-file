@@ -7,28 +7,19 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build-docker:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - coq_version: '8.20'
-            ocaml_version: '4.14-flambda'
-          - coq_version: '9.0'
-            ocaml_version: '4.14-flambda'
-          - coq_version: '9.1'
-            ocaml_version: '4.14-flambda'
-          - coq_version: '9.2'
-            ocaml_version: '4.14-flambda'
-          - coq_version: 'dev'
-            ocaml_version: '4.14-flambda'
+        coq_version: ['8.20']
 
     runs-on: ubuntu-latest
     container:
       image: coqorg/coq:${{ matrix.coq_version }}
+      options: --user root
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
       - name: Generate test data
         run: |
@@ -40,12 +31,34 @@ jobs:
           eval $(opam env)
           dune build
 
-  build-nix:
+  build-opam:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ocaml_version: '4.14'
+            coq_version: '9.0.0'
+          - ocaml_version: '4.14'
+            coq_version: '9.1.0'
+
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v6
-      - uses: cachix/install-nix-action@v31
-        if: hashFiles('flake.nix') != ''
-      - name: Build with Nix
-        if: hashFiles('flake.nix') != ''
-        run: nix build
+      - uses: actions/checkout@v4
+
+      - uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: ${{ matrix.ocaml_version }}
+
+      - name: Install Rocq
+        run: |
+          opam repo add coq-released https://coq.inria.fr/opam/released
+          opam install -y coq-core.${{ matrix.coq_version }} coq-stdlib.${{ matrix.coq_version }}
+
+      - name: Generate test data
+        run: |
+          chmod +x tests/gen.sh
+          tests/gen.sh
+
+      - name: Build
+        run: opam exec -- dune build
