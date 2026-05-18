@@ -33,6 +33,9 @@ From Stdlib Require Export PArray.
 From Stdlib Require Export Uint63.
 From Stdlib Require Export PrimString.
 
+From ReadFile Require Import NestedArray.
+
+Register NestedArray as readfile.nested_array.type.
 Register PArray.array as readfile.array.type.
 
 Declare ML Module "rocq-read-file.plugin".
