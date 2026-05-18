@@ -3,6 +3,7 @@
     [0x48; 0x65; 0x6C; 0x6C; 0x6F; 0x21]. *)
 
 From ReadFile Require Import ReadFile.
+From ReadFile Require Import NestedArray.
 
 From ReadFile_Tests Extra Dependency "small.bin" as small.
 
@@ -13,7 +14,7 @@ Open Scope uint63_scope.
 (* ------------------------------------------------------------------ *)
 
 ReadFileBytes small As fb_full.
-Check fb_full : array Byte.byte.
+Check fb_full : NestedArray 1 Byte.byte.
 
 Goal PArray.length fb_full = 6.
 Proof. reflexivity. Qed.
@@ -75,7 +76,7 @@ Goal fi_be.[0] = 5216694956355289088. Proof. reflexivity. Qed.
 (* ------------------------------------------------------------------ *)
 
 ReadFileString small As fs_full.
-Check fs_full : string.
+Check fs_full : NestedArray 0 string.
 
 Goal PrimString.length fs_full = 6. Proof. reflexivity. Qed.
 Goal PrimString.get fs_full 0 = 72. Proof. reflexivity. Qed.   (* 'H' *)

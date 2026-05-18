@@ -125,6 +125,9 @@ let default_byte_inductive () : inductive =
 let array_constant () : Constant.t =
   lib_ref_const "readfile.array.type"
 
+let nested_array_constant () : Constant.t =
+  lib_ref_const "readfile.nested_array.type"
+
 let int63_type_constant () : Constant.t =
   lib_ref_const "num.int63.type"
 
@@ -169,6 +172,29 @@ let byte_constructor_constrs (ind : inductive) : Constr.t array =
   Array.init 256 (fun i -> Constr.UnsafeMonomorphic.mkConstruct (ind, i + 1))
 
 (* ================================================================== *)
+(* Nat term construction                                              *)
+(* ================================================================== *)
+
+let nat_O () =
+  match Rocqlib.lib_ref "num.nat.O" with
+  | GlobRef.ConstructRef c -> Constr.UnsafeMonomorphic.mkConstruct c
+  | _ -> assert false
+
+let nat_S () =
+  match Rocqlib.lib_ref "num.nat.S" with
+  | GlobRef.ConstructRef c -> Constr.UnsafeMonomorphic.mkConstruct c
+  | _ -> assert false
+
+let nat_of_int (n : int) : Constr.t =
+  let o = nat_O () in
+  let s = nat_S () in
+  let rec aux n =
+    if n <= 0 then o
+    else Constr.mkApp (s, [| aux (n - 1) |])
+  in
+  aux n
+
+(* ================================================================== *)
 (* Primitive-array term construction                                  *)
 (* ================================================================== *)
 
@@ -187,6 +213,12 @@ let make_array_type ~elem_type : Constr.types =
   let array_c = array_constant () in
   let inst = array_set_instance () in
   Constr.mkApp (Constr.mkConstU (array_c, inst), [| elem_type |])
+
+let make_nested_array_type ~depth ~elem_type : Constr.types =
+  let na = nested_array_constant () in
+  let inst = UVars.Instance.of_array ([||], [| Univ.Level.set; Univ.Level.set |]) in
+  Constr.mkApp (Constr.mkConstU (na, inst),
+                [| nat_of_int depth; elem_type |])
 
 let default_max_array_length = 4194302
 let max_array_length = ref default_max_array_length
@@ -218,12 +250,11 @@ let reset_max_array_length () =
    levels suffice for files up to ~16 TB. *)
 let rec build_nested_array
     ~elem_type ~elem_default (elements : Constr.t array)
-    : Constr.t * Constr.types =
+    : Constr.t * int =
   let n = Array.length elements in
   if n <= !max_array_length then
     let body = make_array_term ~elements ~default:elem_default ~elem_type in
-    let typ  = make_array_type  ~elem_type in
-    (body, typ)
+    (body, 1)
   else begin
     let m = !max_array_length in
     let n_chunks = (n + m - 1) / m in
@@ -238,9 +269,12 @@ let rec build_nested_array
     let inner_default =
       make_array_term ~elements:[||] ~default:elem_default ~elem_type
     in
-    build_nested_array
-      ~elem_type:inner_type ~elem_default:inner_default
-      chunks
+    let (body, inner_depth) =
+      build_nested_array
+        ~elem_type:inner_type ~elem_default:inner_default
+        chunks
+    in
+    (body, inner_depth + 1)
   end
 
 (* ================================================================== *)
@@ -307,9 +341,10 @@ let read_bytes
     Array.init n (fun i -> ctors.(Char.code (Bytes.get raw i)))
   in
   let elem_default = ctors.(0) in
-  let body, typ =
+  let (body, depth) =
     build_nested_array ~elem_type ~elem_default elements
   in
+  let typ = make_nested_array_type ~depth ~elem_type in
   declare_def ~env ~name ~typ ~body
 
 (* ================================================================== *)
@@ -359,9 +394,10 @@ let read_int63
   in
   let elem_default = Constr.mkInt (Uint63.of_int 0) in
   let elem_type = Constr.UnsafeMonomorphic.mkConst (int63_type_constant ()) in
-  let body, typ =
+  let (body, depth) =
     build_nested_array ~elem_type ~elem_default elements
   in
+  let typ = make_nested_array_type ~depth ~elem_type in
   declare_def ~env ~name ~typ ~body
 
 (* ================================================================== *)
@@ -376,7 +412,8 @@ let read_string
   let pstring_t = pstring_type_term () in
   if n <= pstring_max_length then begin
     let body = make_pstring_term (Bytes.unsafe_to_string raw) in
-    declare_def ~env ~name ~typ:pstring_t ~body
+    let typ = make_nested_array_type ~depth:0 ~elem_type:pstring_t in
+    declare_def ~env ~name ~typ ~body
   end else begin
     let m = pstring_max_length in
     let n_chunks = (n + m - 1) / m in
@@ -388,8 +425,9 @@ let read_string
         make_pstring_term chunk)
     in
     let elem_default = make_pstring_term "" in
-    let body, typ =
+    let (body, depth) =
       build_nested_array ~elem_type:pstring_t ~elem_default elements
     in
+    let typ = make_nested_array_type ~depth ~elem_type:pstring_t in
     declare_def ~env ~name ~typ ~body
   end
