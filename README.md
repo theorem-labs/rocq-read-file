@@ -3,6 +3,13 @@
 A Rocq plugin that reads files from disk into Rocq-side primitive
 values: byte arrays, int63 arrays, or primitive strings.
 
+## Installation
+
+```
+opam repo add rocq-released https://rocq-prover.org/opam/released
+opam install rocq-read-file
+```
+
 ## Commands
 
 The file argument can be a string literal (`"path/to/file"`) or an
