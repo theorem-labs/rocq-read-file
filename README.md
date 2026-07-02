@@ -168,8 +168,9 @@ them but tuck the output into per-target log files.
 ## Build dependencies
 
 * Rocq 9.0+.
-* `rocq-runtime` must be installed and visible to dune. Standard opam
-  install is fine.
+* `rocq-runtime` (for the plugin libraries) and `coq-core` (for the
+  `coqc`/`coqpp` binaries dune invokes) must be installed and visible
+  to dune. Standard opam install is fine.
 
 ## Implementation notes
 
