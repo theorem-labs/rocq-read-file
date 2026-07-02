@@ -3,7 +3,7 @@
  (public_name rocq-read-file.plugin)
  (synopsis "Read files into Rocq as primitive arrays / strings")
  (flags :standard -rectypes -w -27-32-33-39)
- (libraries coq-core.plugins.ltac)
+ (libraries rocq-runtime.plugins.ltac)
  (preprocess (pps ppx_optcomp -- -cookie "ppx_optcomp.env=env ~coq:(Defined \"%{coq:version.major}.%{coq:version.minor}\")")))
 
 (coq.pp (modules g_read_file))
