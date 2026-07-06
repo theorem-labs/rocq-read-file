@@ -33,7 +33,7 @@ jobs:
             endGroup
             startGroup "Upgrade dune (dune-project requires lang dune 3.21)"
               opam pin remove -n -y dune || true
-              opam install -y "dune>=3.21"
+              opam install -y "dune>=3.21" "dune<3.24"
             endGroup
           script: |
             startGroup "Build"
