@@ -32,6 +32,7 @@ jobs:
               opam config list; opam repo list; opam list
             endGroup
             startGroup "Repin dune to 3.23.1 ((lang dune 3.21) required; < 3.24 until unmigrated deps catch up)"
+              opam update
               opam pin add -k version -y dune 3.23.1
             endGroup
           script: |
