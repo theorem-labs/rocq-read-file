@@ -12,7 +12,7 @@ depends: [
   "ocaml" {>= "4.14"}
   "dune" {>= "3.21" & build}
   "ppx_optcomp" {build}
-  "coq-core" {>= "9.0" | = "dev"}
+  "rocq-runtime" {>= "9.0" | = "dev"}
   "rocq-stdlib" {>= "9.0" | = "dev"}
   "odoc" {with-doc}
 ]
