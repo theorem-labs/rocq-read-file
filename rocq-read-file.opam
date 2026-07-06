@@ -10,7 +10,7 @@ homepage: "https://github.com/theorem-labs/rocq-read-file"
 bug-reports: "https://github.com/theorem-labs/rocq-read-file/issues"
 depends: [
   "ocaml" {>= "4.14"}
-  "dune" {>= "3.8" & build}
+  "dune" {>= "3.21" & build}
   "ppx_optcomp" {build}
   "coq-core" {>= "9.0" | = "dev"}
   "rocq-stdlib" {>= "9.0" | = "dev"}
@@ -31,3 +31,4 @@ build: [
   ]
 ]
 dev-repo: "git+https://github.com/theorem-labs/rocq-read-file.git"
+x-maintenance-intent: ["(latest)"]
