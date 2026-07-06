@@ -1,6 +1,6 @@
 (dirs :standard \ perf)
 
-(coq.theory
+(rocq.theory
  (name ReadFile_Tests)
  (theories ReadFile)
  (plugins rocq-read-file.plugin))

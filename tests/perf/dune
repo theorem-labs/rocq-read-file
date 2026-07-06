@@ -1,4 +1,4 @@
-(coq.theory
+(rocq.theory
  (name ReadFile_Perf)
  (theories ReadFile Stdlib)
  (plugins rocq-read-file.plugin))
