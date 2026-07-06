@@ -31,9 +31,8 @@ jobs:
             startGroup "Print opam config"
               opam config list; opam repo list; opam list
             endGroup
-            startGroup "Upgrade dune (dune-project requires lang dune 3.21)"
-              opam pin remove -n -y dune || true
-              opam install -y "dune>=3.21" "dune<3.24"
+            startGroup "Repin dune to 3.23.1 ((lang dune 3.21) required; < 3.24 until unmigrated deps catch up)"
+              opam pin add -k version -y dune 3.23.1
             endGroup
           script: |
             startGroup "Build"
