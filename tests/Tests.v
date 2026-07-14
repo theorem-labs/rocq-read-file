@@ -4,6 +4,7 @@
 
 From ReadFile Require Import ReadFile.
 From ReadFile Require Import NestedArray.
+From ReadFile_Tests Require dep_hashes.
 
 From ReadFile_Tests Extra Dependency "small.bin" as small.
 

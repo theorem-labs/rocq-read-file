@@ -10,10 +10,24 @@ on:
 
 jobs:
   build:
+    name: build (Rocq ${{ matrix.rocq_version }}, Dune ${{ matrix.dune_version }})
     strategy:
       fail-fast: false
       matrix:
-        coq_version: ['9.0', '9.1', '9.2', 'dev']
+        include:
+          # Upstream released Rocq packages still constrain Dune to < 3.24.
+          # Exercise our lower bound once and the newest pre-removal Dune
+          # elsewhere.
+          - rocq_version: '9.0'
+            dune_version: '3.21.0'
+          - rocq_version: '9.1'
+            dune_version: '3.23.1'
+          - rocq_version: '9.2'
+            dune_version: '3.23.1'
+          # Rocq dev and its stdlib use the rocq build language, so this lane
+          # directly checks the Dune release that deleted the coq extension.
+          - rocq_version: 'dev'
+            dune_version: '3.24.0'
 
     runs-on: ubuntu-latest
 
@@ -22,7 +36,8 @@ jobs:
 
       - uses: rocq-prover/docker-opam-action@master
         with:
-          coq_version: ${{ matrix.coq_version }}
+          # The action retains its historical input name.
+          coq_version: ${{ matrix.rocq_version }}
           before_install: |
             startGroup "Fix workspace permissions"
               sudo chown -R $(id -u):$(id -g) .
@@ -31,16 +46,24 @@ jobs:
             startGroup "Print opam config"
               opam config list; opam repo list; opam list
             endGroup
-            startGroup "Repin dune to 3.23.1 ((lang dune 3.21) required; < 3.24 until unmigrated deps catch up)"
+            startGroup "Pin Dune ${{ matrix.dune_version }}"
               opam update
-              opam pin add -k version -y dune 3.23.1
+              opam pin add -k version -y dune "${{ matrix.dune_version }}"
             endGroup
           script: |
+            startGroup "Tool versions"
+              opam exec -- dune --version
+              opam exec -- rocq --version
+            endGroup
             startGroup "Build"
               opam exec -- dune build
             endGroup
+            startGroup "Check generated opam metadata"
+              git diff --exit-code -- rocq-read-file.opam
+              opam lint rocq-read-file.opam
+            endGroup
             startGroup "Install"
-              opam exec -- dune install
+              opam exec -- dune install -p rocq-read-file
             endGroup
             startGroup "Perf tests"
               opam exec -- dune build --root tests/perf

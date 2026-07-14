@@ -140,36 +140,38 @@ Definition byte_at (i : int) : Byte.byte :=
 ## Build
 
 ```sh
-./tests/gen.sh    # generate test data (only needed for tests/)
 dune build
 ```
 
 Or via the convenience Makefile:
 
 ```sh
-make build        # data + dune build
-make perf         # run timing tests via coqc directly
+make build        # plugin, theories, and correctness tests
+make tests        # build the correctness-test alias
+make perf         # generate perf data and run the isolated perf project
 ```
 
-The data step writes about 100 MB of random data into `tests/data/`.
+`make perf` stages the current package in the active opam switch, then builds
+the separate `tests/perf` Dune project. That project generates about 100 MB of
+test data under its `_build` directory.
 
 ## Running the tests
 
 `tests/Tests.v` contains correctness tests against a fixed-content
-fixture (`tests/data/small.bin`, the bytes of `"Hello!"`).  It is
+fixture (`tests/fixtures/small.bin`, the bytes of `"Hello!"`).  It is
 compiled by `dune build` along with everything else, so a build
 failure in that file means a behaviour regression.
 
-`tests/Perf{Bytes,Int63,String}.v` contain `Time` lines at sizes 1 KB
-through 64 MB.  Their compile-time output is the timing data.  Use
-`make perf` to see it on your terminal — `dune build` will compile
-them but tuck the output into per-target log files.
+`tests/perf/Perf{Bytes,Int63,String}.v` contain `Time` lines at sizes 1 KB
+through 64 MB. Their compile-time output is the timing data. The perf suite is
+an isolated Dune project and only runs via `make perf` (or an equivalent
+`dune build --root tests/perf` after installing the package).
 
 ## Build dependencies
 
-* Coq 8.18+ or Rocq 9.x.
-* `coq-core` (or `rocq-runtime`) must be installed and visible to
-  dune. Standard opam install is fine.
+* Rocq 9.0+.
+* OCaml 4.14+, Dune 3.21+ (including Dune 3.24), and `ppx_optcomp`.
+* `rocq-runtime` and `rocq-stdlib`; a standard opam install resolves them.
 
 ## Implementation notes
 
