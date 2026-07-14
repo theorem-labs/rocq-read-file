@@ -1,21 +1,19 @@
-.PHONY: all build data tests perf clean
+.PHONY: all build tests perf clean
 
 all: build
 
-data:
-	./tests/gen.sh
-
-build: data
+build:
 	dune build
 
-tests: build
+tests:
+	dune build @runtest
 
-perf: data
-	dune build src theories
-	@echo "=== bytes ===";  coqc -R _build/default/theories ReadFile -I _build/default/src tests/PerfBytes.v
-	@echo "=== int63 ===";  coqc -R _build/default/theories ReadFile -I _build/default/src tests/PerfInt63.v
-	@echo "=== string ==="; coqc -R _build/default/theories ReadFile -I _build/default/src tests/PerfString.v
+perf:
+	dune build @install
+	dune install -p rocq-read-file
+	dune build --root tests/perf --force
 
 clean:
 	dune clean
-	rm -f tests/data/*.bin tests/data/*.txt
+	dune clean --root tests/perf
+	rm -rf tests/perf/data
