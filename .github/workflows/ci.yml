@@ -17,9 +17,9 @@ jobs:
         include:
           # Upstream released Rocq packages still constrain Dune to < 3.24.
           # Exercise our lower bound once and the newest pre-removal Dune
-          # elsewhere.
+          # elsewhere. Dune 3.23 fixed Rocq configuration discovery (#14093).
           - rocq_version: '9.0'
-            dune_version: '3.21.0'
+            dune_version: '3.23.0'
           - rocq_version: '9.1'
             dune_version: '3.23.1'
           - rocq_version: '9.2'

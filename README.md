@@ -170,7 +170,7 @@ an isolated Dune project and only runs via `make perf` (or an equivalent
 ## Build dependencies
 
 * Rocq 9.0+.
-* OCaml 4.14+, Dune 3.21+ (including Dune 3.24), and `ppx_optcomp`.
+* OCaml 4.14+, Dune 3.23+ (including Dune 3.24), and `ppx_optcomp`.
 * `rocq-runtime` and `rocq-stdlib`; a standard opam install resolves them.
 
 ## Implementation notes
