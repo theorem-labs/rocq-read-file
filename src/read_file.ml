@@ -313,7 +313,14 @@ let declare_def ~env ~name ~typ ~body =
       ~kind:Decls.(IsDefinition Definition)
       (Declare.DefinitionEntry entry)
   in
-  Feedback.msg_info
+  (* Rocq announces newly declared objects through [Flags.if_verbose
+     Feedback.msg_info] — see [Declare.definition_message],
+     [DeclareInd.declare_mutual_inductive_with_eliminations], etc.
+     [rocq compile] sets [Flags.quiet], so batch builds stay silent,
+     while interactive frontends (rocq repl, rocqide, coq-lsp) still
+     report the definition.  This matches the visibility of Rocq's own
+     "foo is defined" message exactly. *)
+  Flags.if_verbose Feedback.msg_info
     Pp.(str "Defined "
         ++ Id.print name
         ++ str " : "
