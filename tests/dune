@@ -6,3 +6,16 @@
  (plugins rocq-read-file.plugin))
 
 (copy_files fixtures/*.bin)
+
+; Make the fixture an explicit dependency of the generated Rocq module.
+; Dune cannot infer dependencies declared through Extra Dependency.
+(rule
+ (target dep_hashes.v)
+ (deps small.bin)
+ (action
+  (with-stdout-to %{target}
+   (run rocq-read-file-shafile %{deps}))))
+
+(alias
+ (name runtest)
+ (deps Tests.vo))
